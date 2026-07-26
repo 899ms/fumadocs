@@ -1,3 +1,25 @@
+## fumadocs-mdx@15.2.0
+
+### Support Macro API
+
+Use `fumadocs-mdx/macro` to define collections, and enable the macro-style API from bundler plugin (e.g. `createMDX`) using the `include` option.
+
+## fumadocs-mdx@15.1.1
+
+### Migrate from `js-yaml` to `yaml`
+
+## fumadocs-mdx@15.1.0
+
+### Default to Base UI
+
+Internal packages & templates now use Base UI rather than Radix UI.
+
+## fumadocs-mdx@15.0.13
+
+### Require `collection` query param at regex matching
+
+Instead of passing through all JSON/YAML files, the meta loader now requires `collection` query param to be triggered.
+
 # next-docs-mdx
 
 ## 15.0.12

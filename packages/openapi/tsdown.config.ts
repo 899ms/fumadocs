@@ -33,18 +33,10 @@ export default defineConfig({
     onlyBundle: [
       'fast-content-type-parse',
       '@fastify/deepmerge',
-
-      '@apidevtools/json-schema-ref-parser',
       '@scalar/openapi-upgrader',
-
-      // for Vite RSC compatibility
       'xml-js',
-      'ajv',
-      'fast-deep-equal',
-      'json-schema-traverse',
-      'fast-uri',
     ],
-    neverBundle: [/^node:/, 'fs', /ajv(.+)\.d\.ts/],
+    neverBundle: [/^node:/, 'fs'],
   },
   exports: {
     enabled: true,

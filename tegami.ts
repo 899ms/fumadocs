@@ -8,23 +8,22 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const paper = tegami({
   npm: {
-    updateLockFile: true,
+    trustedPublish: {
+      provider: 'github',
+      workflow: 'release.yml',
+    },
   },
   plugins: [
     github({
       repo: 'fuma-nama/fumadocs',
-      cli: {
-        versionPr: {
-          base: 'dev',
-        },
+      versionPr: {
+        base: 'dev',
       },
     }),
     {
       name: 'custom',
-      cli: {
-        publishPlanApplied() {
-          updateStackblitzVersions();
-        },
+      applyCliDraft() {
+        updateStackblitzVersions();
       },
       async willPublish({ pkg }) {
         console.log(`building ${pkg.name}`);

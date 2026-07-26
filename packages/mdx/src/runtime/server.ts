@@ -2,7 +2,7 @@ import { type MetaData, type PageData, type Source, type VirtualFile } from 'fum
 import * as path from 'node:path';
 import type { DocCollection, DocsCollection, MetaCollection } from '@/config';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { CompiledMDXProperties } from '@/loaders/mdx/build-mdx';
+import type { CompiledMDXProperties } from '@/loaders/mdx/build';
 import type { InternalTypeConfig, DocData, DocMethods, FileInfo, MetaMethods } from './types';
 import type { StructuredData } from 'fumadocs-core/mdx-plugins/remark-structure';
 
@@ -63,15 +63,7 @@ export type ServerCreate<Config, TC extends InternalTypeConfig = InternalTypeCon
   typeof server<Config, TC>
 >;
 
-export interface ServerOptions {
-  doc?: {
-    passthroughs?: string[];
-  };
-}
-
-export function server<Config, TC extends InternalTypeConfig>(options: ServerOptions = {}) {
-  const { doc: { passthroughs: docPassthroughs = [] } = {} } = options;
-
+export function server<Config, TC extends InternalTypeConfig>() {
   function fileInfo(file: string, base: string): FileInfo {
     if (file.startsWith('./')) {
       file = file.slice(2);
@@ -91,7 +83,7 @@ export function server<Config, TC extends InternalTypeConfig>(options: ServerOpt
       _exports: entry as unknown as Record<string, unknown>,
     };
 
-    for (const key of docPassthroughs) {
+    for (const key of ['lastModified', 'extractedReferences']) {
       // @ts-expect-error -- handle passthrough properties
       data[key] = entry[key];
     }
@@ -294,11 +286,14 @@ function createDocMethods(
       }
 
       const data = await load();
-      if (typeof data._markdown !== 'string')
+      // the dynamic runtime nests extra exports under `_exports`
+      const markdown =
+        data._markdown ?? (data as { _exports?: { _markdown?: string } })._exports?._markdown;
+      if (typeof markdown !== 'string')
         throw new Error(
           "getText('processed') requires `includeProcessedMarkdown` to be enabled in your collection config.",
         );
-      return data._markdown;
+      return markdown;
     },
     async getMDAST() {
       const data = await load();

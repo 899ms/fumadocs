@@ -3,7 +3,7 @@ import type { I18nConfig } from '@/i18n';
 import { createContentStorageBuilder, type ContentStorage } from './storage/content';
 import { createPageTreeBuilder, type PageTreeOptions } from '@/source/page-tree/builder';
 import { dirname, joinPath } from './path';
-import { normalizeUrl } from '@/utils/normalize-url';
+import { normalizeUrl } from '@/utils/url';
 import { SlugFn, slugsPlugin } from '@/source/plugins/slugs';
 import { iconPlugin, type IconResolver } from '@/source/plugins/icon';
 import type { MetaData, PageData, StaticSource } from './source';
@@ -358,7 +358,13 @@ export function loader<I extends ResolvedInput, I18n extends I18nConfig | undefi
       let target;
 
       if (value.startsWith('./') || value.startsWith('../')) {
-        const path = joinPath(dir, value);
+        let decoded = value;
+        try {
+          decoded = decodeURI(value);
+        } catch {
+          // keep malformed hrefs untouched so custom resolvers can still handle them
+        }
+        const path = joinPath(dir, decoded);
 
         target = indexer.getPage(path, language);
       } else {

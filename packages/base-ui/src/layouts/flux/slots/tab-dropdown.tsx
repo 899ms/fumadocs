@@ -7,6 +7,7 @@ import { cn } from '@/utils/cn';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AnimatePresence, motion } from 'motion/react';
 import { isLayoutTabActive, type LayoutTab } from '../../shared';
+import { useTreePath } from '@/contexts/tree';
 
 export interface TabDropdownProps extends ComponentProps<'button'> {
   placeholder?: ReactNode;
@@ -16,9 +17,10 @@ export interface TabDropdownProps extends ComponentProps<'button'> {
 export function TabDropdown({ tabs, placeholder, className, ...props }: TabDropdownProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const path = useTreePath();
   const selectedIdx = useMemo(() => {
-    return tabs.findLastIndex((item) => isLayoutTabActive(item, pathname));
-  }, [tabs, pathname]);
+    return tabs.findLastIndex((item) => isLayoutTabActive(item, path, pathname));
+  }, [tabs, path, pathname]);
   const selected = selectedIdx !== -1 ? tabs[selectedIdx] : undefined;
 
   const onClick = () => {
@@ -39,7 +41,7 @@ export function TabDropdown({ tabs, placeholder, className, ...props }: TabDropd
       {item && (
         <PopoverTrigger
           className={cn(
-            'flex items-center gap-2 rounded-xl overflow-hidden p-1.5 border shadow-sm text-sm text-start transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground data-[state=open]:bg-fd-accent data-[state=open]:text-fd-accent-foreground',
+            'flex items-center gap-2 rounded-xl overflow-hidden p-1.5 border shadow-sm text-sm text-start transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground data-[popup-open]:bg-fd-accent data-[popup-open]:text-fd-accent-foreground',
             className,
           )}
           {...props}

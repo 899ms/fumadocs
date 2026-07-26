@@ -1,10 +1,15 @@
 'use client';
 import { useMemo, type ReactNode } from 'react';
-import type { ParsedSchema, SchemaResolver } from '@/schema';
+import type { ParsedSchema } from '@/schema';
 import { FormatFlags, schemaToString } from '@/schema/to-string';
 import { mergeAllOf } from '@/schema/merge';
-import { SchemaUI, type SchemaUIProps } from '@/components/schema/client';
+import { BlockTag, InlineTag, SchemaUI, type SchemaUIProps } from '@/components/schema/client';
 import { fromTranslations, useTranslations } from '@fuma-translate/react';
+import { dereferenceShallow } from '@/schema/dereference';
+
+interface InfoTag {
+  node: ReactNode;
+}
 
 export interface FieldBase {
   description?: ReactNode;
@@ -14,11 +19,6 @@ export interface FieldBase {
   aliasName: string;
 
   deprecated?: boolean;
-}
-
-export interface InfoTag {
-  label: ReactNode;
-  value: string;
 }
 
 export interface SchemaDataObjectProperty {
@@ -61,8 +61,8 @@ export type SchemaData = FieldBase &
 export interface SchemaUIOptions {
   root: ParsedSchema;
   client: Omit<SchemaUIProps, 'generated'>;
-  resolver: SchemaResolver;
   renderMarkdown: (md: string) => ReactNode;
+  renderCodeblock: (opts: { lang: string; code: string }) => ReactNode;
 
   /**
    * include read only props
@@ -91,30 +91,30 @@ export function Schema({
   root,
   readOnly,
   writeOnly,
-  resolver,
   showExample,
   renderMarkdown,
+  renderCodeblock,
 }: SchemaUIOptions) {
   const translations = useTranslations().translations;
   const generated = useMemo(() => {
     return generateSchemaUI({
       root,
-      resolver,
       readOnly,
       writeOnly,
       showExample,
       renderMarkdown,
+      renderCodeblock,
       translations,
     });
-  }, [root, readOnly, writeOnly, resolver, showExample, renderMarkdown, translations]);
+  }, [root, readOnly, writeOnly, showExample, renderMarkdown, renderCodeblock, translations]);
 
   return <SchemaUI {...client} generated={generated} />;
 }
 
 export function generateSchemaUI({
   root,
-  resolver,
   renderMarkdown,
+  renderCodeblock,
   readOnly = false,
   writeOnly = false,
   showExample = false,
@@ -126,33 +126,24 @@ export function generateSchemaUI({
   const refs: Record<string, SchemaData> = {};
 
   function generateInfoTags(schema: Exclude<ParsedSchema, boolean>) {
-    const fields: InfoTag[] = [];
-
-    if (schema.default !== undefined) {
-      fields.push({
-        label: t('Default'),
-        value: JSON.stringify(schema.default),
-      });
-    }
+    const inlines: InfoTag[] = [];
+    const blocks: InfoTag[] = [];
 
     if (schema.pattern) {
-      fields.push({
-        label: t('Match'),
-        value: schema.pattern,
+      inlines.push({
+        node: <InlineTag label={t('Match')}>{schema.pattern}</InlineTag>,
       });
     }
 
     if (schema.format) {
-      fields.push({
-        label: t('Format'),
-        value: schema.format,
+      inlines.push({
+        node: <InlineTag label={t('Format')}>{schema.format}</InlineTag>,
       });
     }
 
     if (schema.multipleOf) {
-      fields.push({
-        label: t('Multiple Of'),
-        value: schema.multipleOf.toString(),
+      inlines.push({
+        node: <InlineTag label={t('Multiple Of')}>{schema.multipleOf}</InlineTag>,
       });
     }
 
@@ -164,17 +155,15 @@ export function generateSchemaUI({
       schema.exclusiveMaximum,
     );
     if (range) {
-      fields.push({
-        label: t('Range'),
-        value: range,
+      inlines.push({
+        node: <InlineTag label={t('Range')}>{range}</InlineTag>,
       });
     }
 
     range = formatRange('length', schema.minLength, undefined, schema.maxLength, undefined);
     if (range) {
-      fields.push({
-        label: t('Length'),
-        value: range,
+      inlines.push({
+        node: <InlineTag label={t('Length')}>{range}</InlineTag>,
       });
     }
 
@@ -186,44 +175,84 @@ export function generateSchemaUI({
       undefined,
     );
     if (range) {
-      fields.push({
-        label: t('Properties'),
-        value: range,
+      inlines.push({
+        node: <InlineTag label={t('Properties')}>{range}</InlineTag>,
       });
     }
 
     range = formatRange('items', schema.minItems, undefined, schema.maxItems, undefined);
     if (range) {
-      fields.push({
-        label: t('Items'),
-        value: range,
+      inlines.push({
+        node: <InlineTag label={t('Items')}>{range}</InlineTag>,
       });
     }
 
-    if (schema.enum) {
-      fields.push({
-        label: t('Value in'),
-        value: schema.enum.map((value) => JSON.stringify(value)).join(' | '),
+    if (schema.enum && schema.enum.length > 0) {
+      const members = schema.enum.map((value) => JSON.stringify(value, null, 2));
+
+      blocks.push({
+        node: (
+          <BlockTag label={t('Value in')}>
+            <ul>
+              {members.map((m, i) => (
+                <li
+                  key={i}
+                  className="font-mono list-disc list-inside ps-1 marker:text-fd-muted-foreground"
+                >
+                  {m}
+                </li>
+              ))}
+            </ul>
+          </BlockTag>
+        ),
       });
     }
 
-    if (showExample && schema.examples) {
-      for (const example of schema.examples) {
-        fields.push({
-          label: t('Example'),
-          value: JSON.stringify(example, null, 2),
+    if (schema.default !== undefined) {
+      const defaultCode = JSON.stringify(schema.default, null, 2);
+      if (defaultCode.includes('\n')) {
+        blocks.push({
+          node: (
+            <BlockTag label={t('Default')}>
+              {renderCodeblock({ lang: 'json', code: defaultCode })}
+            </BlockTag>
+          ),
+        });
+      } else {
+        inlines.push({
+          node: <InlineTag label={t('Default')}>{defaultCode}</InlineTag>,
         });
       }
     }
 
-    return fields;
+    if (showExample && schema.examples) {
+      for (const example of schema.examples) {
+        const code = JSON.stringify(example, null, 2);
+
+        if (code.includes('\n')) {
+          blocks.push({
+            node: (
+              <BlockTag label={t('Example')}>{renderCodeblock({ lang: 'json', code })}</BlockTag>
+            ),
+          });
+
+          continue;
+        }
+
+        inlines.push({
+          node: <InlineTag label={t('Example')}>{code}</InlineTag>,
+        });
+      }
+    }
+
+    return [...inlines, ...blocks];
   }
 
   let _counter = 0;
   const autoIds = new WeakMap<Exclude<ParsedSchema, boolean>, string>();
   function getSchemaId(schema: ParsedSchema): string {
     if (typeof schema === 'boolean') return String(schema);
-    const rawRef = resolver(schema).$ref;
+    const rawRef = typeof schema.$ref === 'string' ? schema.$ref : undefined;
     if (rawRef) return rawRef;
 
     const prev = autoIds.get(schema);
@@ -234,14 +263,16 @@ export function generateSchemaUI({
     return generated;
   }
 
-  function isVisible(schema: ParsedSchema): boolean {
+  function isVisible(raw: ParsedSchema): boolean {
+    const schema = dereferenceShallow(raw);
     if (typeof schema === 'boolean') return true;
     if (schema.writeOnly) return writeOnly;
     if (schema.readOnly) return readOnly;
     return true;
   }
 
-  function base(schema: ParsedSchema): FieldBase {
+  function base(raw: ParsedSchema): FieldBase {
+    const schema = dereferenceShallow(raw);
     if (typeof schema === 'boolean') {
       const name = schema ? 'any' : 'never';
       return {
@@ -253,18 +284,19 @@ export function generateSchemaUI({
     return {
       description: schema.description ? renderMarkdown(schema.description) : undefined,
       infoTags: generateInfoTags(schema),
-      typeName: schemaToString(schema, resolver),
-      aliasName: schemaToString(schema, resolver, FormatFlags.UseAlias),
+      typeName: schemaToString(raw),
+      aliasName: schemaToString(raw, FormatFlags.UseAlias),
       deprecated: schema.deprecated,
     };
   }
 
-  function scanRefs(id: string, schema: ParsedSchema) {
+  function scanRefs(id: string, raw: ParsedSchema) {
     if (id in refs) return;
+    const schema = dereferenceShallow(raw);
     if (typeof schema === 'boolean') {
       refs[id] = {
         type: 'primitive',
-        ...base(schema),
+        ...base(raw),
       };
       return;
     }
@@ -273,7 +305,7 @@ export function generateSchemaUI({
       const out: SchemaData = {
         type: 'or',
         items: [],
-        ...base(schema),
+        ...base(raw),
       };
       refs[id] = out;
 
@@ -295,7 +327,7 @@ export function generateSchemaUI({
       const out: SchemaData = {
         type: 'and',
         items: [],
-        ...base(schema),
+        ...base(raw),
       };
       refs[id] = out;
       for (const omit of ['anyOf', 'oneOf'] as const) {
@@ -316,13 +348,15 @@ export function generateSchemaUI({
       const out: SchemaData = {
         type: 'or',
         items: [],
-        ...base(schema),
+        ...base(raw),
       };
       refs[id] = out;
 
-      for (const item of union) {
-        if (!item || typeof item !== 'object' || !isVisible(item)) continue;
-        const itemId = getSchemaId(item);
+      for (const rawItem of union) {
+        if (!rawItem || typeof rawItem !== 'object' || !isVisible(rawItem)) continue;
+        const itemId = getSchemaId(rawItem);
+        const item = dereferenceShallow(rawItem);
+        if (typeof item !== 'object') continue;
         const key = `${id}_extends:${itemId}`;
 
         scanRefs(key, {
@@ -337,7 +371,7 @@ export function generateSchemaUI({
         });
         out.items.push({
           $type: key,
-          name: refs[itemId]?.aliasName ?? schemaToString(item, resolver, FormatFlags.UseAlias),
+          name: refs[itemId]?.aliasName ?? schemaToString(rawItem, FormatFlags.UseAlias),
         });
       }
       return;
@@ -352,7 +386,7 @@ export function generateSchemaUI({
       const out: SchemaData = {
         type: 'object',
         props: [],
-        ...base(schema),
+        ...base(raw),
       };
       refs[id] = out;
 
@@ -393,7 +427,7 @@ export function generateSchemaUI({
         item: {
           $type,
         },
-        ...base(schema),
+        ...base(raw),
       };
       scanRefs($type, items);
       return;
@@ -401,7 +435,7 @@ export function generateSchemaUI({
 
     refs[id] = {
       type: 'primitive',
-      ...base(schema),
+      ...base(raw),
     };
   }
 

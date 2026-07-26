@@ -14,10 +14,9 @@ test('double-oneOf in allOf does not crash', async () => {
     renderMarkdown(md) {
       return md;
     },
-    resolver: (s) => ({
-      dereferenced: s,
-      $ref: typeof s === 'object' ? parsed.getRawRef(s) : undefined,
-    }),
+    renderCodeblock() {
+      return null;
+    },
   });
 
   // Should produce a cross-product of 4 oneOf variants, not crash
@@ -33,69 +32,68 @@ test('test', async () => {
     renderMarkdown(md) {
       return md;
     },
-    resolver: (s) => ({
-      dereferenced: s,
-      $ref: typeof s === 'object' ? parsed.getRawRef(s) : undefined,
-    }),
+    renderCodeblock() {
+      return null;
+    },
   });
 
   expect(out).toMatchInlineSnapshot(`
     {
-      "$root": "#/components/schemas/V1KeysVerifyKeyResponse",
+      "$root": "__0",
       "refs": {
-        "#/components/schemas/V1KeysVerifyKeyResponse": {
-          "aliasName": "V1KeysVerifyKeyResponse",
+        "__0": {
+          "aliasName": "object",
           "deprecated": undefined,
           "description": undefined,
           "infoTags": [],
           "props": [
             {
-              "$type": "__0",
+              "$type": "__1",
               "name": "keyId",
               "required": false,
             },
             {
-              "$type": "__1",
+              "$type": "__2",
               "name": "valid",
               "required": true,
             },
             {
-              "$type": "__2",
+              "$type": "__3",
               "name": "name",
               "required": false,
             },
             {
-              "$type": "__3",
+              "$type": "__4",
               "name": "ownerId",
               "required": false,
             },
             {
-              "$type": "__4",
+              "$type": "__5",
               "name": "meta",
               "required": false,
             },
             {
-              "$type": "__6",
+              "$type": "__7",
               "name": "expires",
               "required": false,
             },
             {
-              "$type": "__7",
+              "$type": "__8",
               "name": "ratelimit",
               "required": false,
             },
             {
-              "$type": "__11",
+              "$type": "__12",
               "name": "remaining",
               "required": false,
             },
             {
-              "$type": "__12",
+              "$type": "__13",
               "name": "code",
               "required": false,
             },
             {
-              "$type": "__13",
+              "$type": "__14",
               "name": "enabled",
               "required": false,
             },
@@ -103,7 +101,7 @@ test('test', async () => {
           "type": "object",
           "typeName": "object",
         },
-        "__0": {
+        "__1": {
           "aliasName": "string",
           "deprecated": undefined,
           "description": "The id of the key",
@@ -111,19 +109,10 @@ test('test', async () => {
           "type": "primitive",
           "typeName": "string",
         },
-        "__1": {
-          "aliasName": "boolean",
-          "deprecated": undefined,
-          "description": "Whether the key is valid or not.
-    A key could be invalid for a number of reasons, for example if it has expired, has no more verifications left or if it has been deleted.",
-          "infoTags": [],
-          "type": "primitive",
-          "typeName": "boolean",
-        },
         "__10": {
           "aliasName": "number",
           "deprecated": undefined,
-          "description": "Unix timestamp in milliseconds when the ratelimit will reset",
+          "description": "Remaining requests after this verification",
           "infoTags": [],
           "type": "primitive",
           "typeName": "number",
@@ -131,12 +120,20 @@ test('test', async () => {
         "__11": {
           "aliasName": "number",
           "deprecated": undefined,
-          "description": "The number of requests that can be made with this key before it becomes invalid. If this field is null or undefined, the key has no request limit.",
+          "description": "Unix timestamp in milliseconds when the ratelimit will reset",
           "infoTags": [],
           "type": "primitive",
           "typeName": "number",
         },
         "__12": {
+          "aliasName": "number",
+          "deprecated": undefined,
+          "description": "The number of requests that can be made with this key before it becomes invalid. If this field is null or undefined, the key has no request limit.",
+          "infoTags": [],
+          "type": "primitive",
+          "typeName": "number",
+        },
+        "__13": {
           "aliasName": "string",
           "deprecated": undefined,
           "description": "If the key is invalid this field will be set to the reason why it is invalid.
@@ -151,14 +148,53 @@ test('test', async () => {
     ",
           "infoTags": [
             {
-              "label": "Value in",
-              "value": ""NOT_FOUND" | "FORBIDDEN" | "USAGE_EXCEEDED" | "RATE_LIMITED" | "UNAUTHORIZED" | "DISABLED" | "INSUFFICIENT_PERMISSIONS"",
+              "node": <BlockTag
+                label="Value in"
+              >
+                <ul>
+                  <li
+                    className="font-mono list-disc list-inside ps-1 marker:text-fd-muted-foreground"
+                  >
+                    "NOT_FOUND"
+                  </li>
+                  <li
+                    className="font-mono list-disc list-inside ps-1 marker:text-fd-muted-foreground"
+                  >
+                    "FORBIDDEN"
+                  </li>
+                  <li
+                    className="font-mono list-disc list-inside ps-1 marker:text-fd-muted-foreground"
+                  >
+                    "USAGE_EXCEEDED"
+                  </li>
+                  <li
+                    className="font-mono list-disc list-inside ps-1 marker:text-fd-muted-foreground"
+                  >
+                    "RATE_LIMITED"
+                  </li>
+                  <li
+                    className="font-mono list-disc list-inside ps-1 marker:text-fd-muted-foreground"
+                  >
+                    "UNAUTHORIZED"
+                  </li>
+                  <li
+                    className="font-mono list-disc list-inside ps-1 marker:text-fd-muted-foreground"
+                  >
+                    "DISABLED"
+                  </li>
+                  <li
+                    className="font-mono list-disc list-inside ps-1 marker:text-fd-muted-foreground"
+                  >
+                    "INSUFFICIENT_PERMISSIONS"
+                  </li>
+                </ul>
+              </BlockTag>,
             },
           ],
           "type": "primitive",
           "typeName": "string",
         },
-        "__13": {
+        "__14": {
           "aliasName": "boolean",
           "deprecated": undefined,
           "description": "Sets the key to be enabled or disabled. Disabled keys will not verify.",
@@ -167,6 +203,15 @@ test('test', async () => {
           "typeName": "boolean",
         },
         "__2": {
+          "aliasName": "boolean",
+          "deprecated": undefined,
+          "description": "Whether the key is valid or not.
+    A key could be invalid for a number of reasons, for example if it has expired, has no more verifications left or if it has been deleted.",
+          "infoTags": [],
+          "type": "primitive",
+          "typeName": "boolean",
+        },
+        "__3": {
           "aliasName": "string",
           "deprecated": undefined,
           "description": "The name of the key, give keys a name to easily identify their purpose",
@@ -174,7 +219,7 @@ test('test', async () => {
           "type": "primitive",
           "typeName": "string",
         },
-        "__3": {
+        "__4": {
           "aliasName": "string",
           "deprecated": undefined,
           "description": "The id of the tenant associated with this key. Use whatever reference you have in your system to identify the tenant. When verifying the key, we will send this field back to you, so you know who is accessing your API.",
@@ -182,14 +227,14 @@ test('test', async () => {
           "type": "primitive",
           "typeName": "string",
         },
-        "__4": {
+        "__5": {
           "aliasName": "object",
           "deprecated": undefined,
           "description": "Any additional metadata you want to store with the key",
           "infoTags": [],
           "props": [
             {
-              "$type": "__5",
+              "$type": "__6",
               "name": "[key: string]",
               "required": false,
             },
@@ -197,7 +242,7 @@ test('test', async () => {
           "type": "object",
           "typeName": "object",
         },
-        "__5": {
+        "__6": {
           "aliasName": "unknown",
           "deprecated": undefined,
           "description": undefined,
@@ -205,7 +250,7 @@ test('test', async () => {
           "type": "primitive",
           "typeName": "unknown",
         },
-        "__6": {
+        "__7": {
           "aliasName": "number",
           "deprecated": undefined,
           "description": "The unix timestamp in milliseconds when the key will expire. If this field is null or undefined, the key is not expiring.",
@@ -213,24 +258,24 @@ test('test', async () => {
           "type": "primitive",
           "typeName": "number",
         },
-        "__7": {
+        "__8": {
           "aliasName": "object",
           "deprecated": undefined,
           "description": "The ratelimit configuration for this key. If this field is null or undefined, the key has no ratelimit.",
           "infoTags": [],
           "props": [
             {
-              "$type": "__8",
+              "$type": "__9",
               "name": "limit",
               "required": true,
             },
             {
-              "$type": "__9",
+              "$type": "__10",
               "name": "remaining",
               "required": true,
             },
             {
-              "$type": "__10",
+              "$type": "__11",
               "name": "reset",
               "required": true,
             },
@@ -238,18 +283,10 @@ test('test', async () => {
           "type": "object",
           "typeName": "object",
         },
-        "__8": {
-          "aliasName": "number",
-          "deprecated": undefined,
-          "description": "Maximum number of requests that can be made inside a window",
-          "infoTags": [],
-          "type": "primitive",
-          "typeName": "number",
-        },
         "__9": {
           "aliasName": "number",
           "deprecated": undefined,
-          "description": "Remaining requests after this verification",
+          "description": "Maximum number of requests that can be made inside a window",
           "infoTags": [],
           "type": "primitive",
           "typeName": "number",

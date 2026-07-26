@@ -21,8 +21,8 @@ import {
 import { StfProvider, useFieldValue, useListener, useStf } from '@fumari/stf';
 import { EditIcon } from 'lucide-react';
 import { useTranslations } from '@fuma-translate/react';
-import type { NoReference } from '@fumadocs/api-docs/schema';
-import type { ServerVariableObject } from '@/types';
+import type { ServerObject, ServerVariableObject } from '@/types';
+import { dereferenceShallow } from '@fumadocs/api-docs/schema/dereference';
 import { resolveServerUrl } from '@/utils/server-url';
 import { idToTitle } from '@fumadocs/api-docs/utils/id-to-title';
 
@@ -54,7 +54,14 @@ export function ServerSelect(props: ComponentProps<typeof DialogTrigger>) {
           <DialogTitle>{t('Server URL')}</DialogTitle>
           <DialogDescription>{t('The base URL of your API endpoint.')}</DialogDescription>
         </DialogHeader>
-        <Select value={server?.id} onValueChange={setServer}>
+        <Select
+          items={Object.entries(servers).map(([id, item]) => ({
+            label: <code className="font-medium">{resolveServerUrl(item, {})}</code>,
+            value: id,
+          }))}
+          value={server?.id ?? null}
+          onValueChange={(v) => v !== null && setServer(v)}
+        >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -93,7 +100,7 @@ function ServerSelectContent({
 }: {
   defaultValues: Record<string, string>;
   onChange: (values: Record<string, string>) => void;
-  schema: Record<string, NoReference<ServerVariableObject>>;
+  schema: NonNullable<ServerObject['variables']>;
 }) {
   const stf = useStf({
     defaultValues: () => structuredClone(defaultValues),
@@ -114,7 +121,9 @@ function ServerSelectContent({
   return (
     <StfProvider value={stf}>
       <div className="flex flex-col gap-4">
-        {Object.entries(schema).map(([key, variable]) => {
+        {Object.entries(schema).map(([key, item]) => {
+          const variable = dereferenceShallow(item);
+
           return (
             <fieldset key={key} className="flex flex-col gap-1">
               <label className={cn(labelVariants())} htmlFor={key}>
@@ -132,13 +141,7 @@ function ServerSelectContent({
   );
 }
 
-function Field({
-  fieldName,
-  variable,
-}: {
-  variable: NoReference<ServerVariableObject>;
-  fieldName: string;
-}) {
+function Field({ fieldName, variable }: { variable: ServerVariableObject; fieldName: string }) {
   const t = useTranslations({ note: 'playground server select' });
   const [value, setValue] = useFieldValue([fieldName], {
     compute(currentValue) {

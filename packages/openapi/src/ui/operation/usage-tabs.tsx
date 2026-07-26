@@ -12,7 +12,6 @@ import {
   CodeBlockTabsTrigger,
 } from 'fumadocs-ui/components/codeblock';
 import { ResponseTabs } from './response-tabs';
-import { NoReference } from '@fumadocs/api-docs/schema';
 import { useRenderContext, useServerContext } from '@/ui/contexts/api';
 import {
   Select,
@@ -33,8 +32,8 @@ export function UsageTabs({
   pathItem,
 }: {
   method: HttpMethods;
-  operation: NoReference<OperationObject>;
-  pathItem: NoReference<PathItemObject>;
+  operation: OperationObject;
+  pathItem: PathItemObject;
 }) {
   const ctx = useRenderContext();
   let { renderAPIExampleUsageTabs, renderAPIExampleLayout } = ctx.content ?? {};
@@ -117,16 +116,16 @@ function UsageTabsSelector() {
   }
 
   if (examples.length === 1) return null;
-  const selected = examples.find((item) => item.id === key);
+  const items = examples.map((item) => ({ value: item.id, label: renderItem(item) }));
   return (
-    <Select value={key} onValueChange={setKey}>
+    <Select items={items} value={key} onValueChange={(v) => v !== null && setKey(v)}>
       <SelectTrigger className="not-prose mb-2">
-        {selected && <SelectValue>{renderItem(selected)}</SelectValue>}
+        <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {examples.map((item) => (
-          <SelectItem key={item.id} value={item.id}>
-            {renderItem(item)}
+        {items.map((item) => (
+          <SelectItem key={item.value} value={item.value}>
+            {item.label}
           </SelectItem>
         ))}
       </SelectContent>

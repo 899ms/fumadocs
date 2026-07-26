@@ -17,6 +17,7 @@ import { type LayoutTab, isLayoutTabActive } from '@/layouts/shared';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { usePathname } from 'fumadocs-core/framework';
 import Link from 'fumadocs-core/link';
+import { useTreePath } from '@/contexts/tree';
 
 export function Header(props: ComponentProps<'header'>) {
   const {
@@ -166,9 +167,10 @@ function LayoutHeaderTabs({
   tabs: LayoutTab[];
 }) {
   const pathname = usePathname();
+  const path = useTreePath();
   const selectedIdx = useMemo(() => {
-    return tabs.findLastIndex((option) => isLayoutTabActive(option, pathname));
-  }, [tabs, pathname]);
+    return tabs.findLastIndex((option) => isLayoutTabActive(option, path, pathname));
+  }, [tabs, path, pathname]);
 
   return (
     <div className={cn('flex flex-row items-end gap-6', className)} {...props}>
@@ -263,7 +265,7 @@ function NavbarLinkItemMenu({
     >
       <PopoverTrigger
         className={cn(
-          'inline-flex items-center gap-1.5 p-1 text-sm text-fd-muted-foreground transition-colors has-data-[active=true]:text-fd-primary data-[state=open]:text-fd-accent-foreground focus-visible:outline-none',
+          'inline-flex items-center gap-1.5 p-1 text-sm text-fd-muted-foreground transition-colors has-data-[active=true]:text-fd-primary data-[popup-open]:text-fd-accent-foreground focus-visible:outline-none',
           className,
         )}
         onPointerEnter={onPointerEnter}

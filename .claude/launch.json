@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "docs",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter=docs", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "obsidian-example",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "examples/obsidian", "dev"],
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}

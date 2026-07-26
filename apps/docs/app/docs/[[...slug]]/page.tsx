@@ -4,7 +4,7 @@ import * as Twoslash from 'fumadocs-twoslash/ui';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 import * as Preview from '@/components/preview';
-import { createMetadata, getPageImage } from '@/lib/metadata';
+import { createMetadata, getPageImageUrl } from '@/lib/metadata';
 import { source } from '@/lib/source';
 import { Wrapper } from '@/components/preview/wrapper';
 import { Mermaid } from '@/components/mdx/mermaid';
@@ -24,6 +24,7 @@ import {
   PageLastUpdate,
   MarkdownCopyButton,
   ViewOptionsPopover,
+  DocsPageProps,
 } from 'fumadocs-ui/layouts/docs/page';
 import { NotFound } from '@/components/layouts/not-found';
 import { getSuggestions } from './suggestions';
@@ -52,9 +53,15 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
       />
     );
 
+  const pageProps = {
+    // tableOfContent: {
+    //   footer: <SponsorsMarquee />,
+    // },
+  } satisfies Partial<DocsPageProps>;
+
   if (page.type === 'openapi') {
     return (
-      <DocsPage full>
+      <DocsPage full {...pageProps}>
         <h1 className="text-[1.75em] font-semibold">{page.data.title}</h1>
 
         <DocsBody>
@@ -66,7 +73,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 
   if (page.type === 'asyncapi') {
     return (
-      <DocsPage full>
+      <DocsPage full {...pageProps}>
         <h1 className="text-[1.75em] font-semibold">{page.data.title}</h1>
 
         <DocsBody>
@@ -79,10 +86,10 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const { body: Mdx, toc, lastModified } = await page.data.load();
 
   return (
-    <DocsPage toc={toc}>
+    <DocsPage toc={toc} {...pageProps}>
       <h1 className="text-[1.75em] font-semibold">{page.data.title}</h1>
       <p className="text-lg text-fd-muted-foreground mb-2">{page.data.description}</p>
-      <div className="flex flex-row flex-wrap gap-2 items-center border-b pb-6">
+      <div className="flex flex-row flex-wrap gap-2 items-center border-b pb-6 mb-4">
         <MarkdownCopyButton markdownUrl={`${page.url}.mdx`} />
         <ViewOptionsPopover
           markdownUrl={`${page.url}.mdx`}
@@ -169,7 +176,7 @@ export async function generateMetadata(props: PageProps<'/docs/[[...slug]]'>): P
   const description = page.data.description ?? 'The library for building documentation sites';
 
   const image = {
-    url: getPageImage(page).url,
+    url: getPageImageUrl(page).url,
     width: 1200,
     height: 630,
   };

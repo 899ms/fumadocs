@@ -1,3 +1,15 @@
+## @fumadocs/story@1.2.0
+
+### Default to Base UI
+
+Internal packages & templates now use Base UI rather than Radix UI.
+
+## @fumadocs/story@1.1.2
+
+### Migrate to `cnfast`
+
+Drop `tailwind-merge`.
+
 # @fumadocs/story
 
 ## 1.1.1

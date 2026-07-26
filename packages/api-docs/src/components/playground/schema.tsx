@@ -1,4 +1,3 @@
-import { Ajv2020 } from 'ajv/dist/2020';
 import { createContext, ReactNode, use, useMemo } from 'react';
 import type { ParsedSchema } from '@/schema';
 import { mergeAllOf } from '@/schema/merge';
@@ -7,9 +6,9 @@ import { stringifyFieldKey } from '@fumari/stf/lib/utils';
 import { sample } from '@/schema/sample';
 import { FormatFlags, schemaToString } from '@/schema/to-string';
 import { dereferenceShallow } from '@/schema/dereference';
+import { matchesSchema, typeMatches } from '@/schema/match';
 
 interface SchemaContextType extends SchemaScope {
-  ajv: Ajv2020;
   docRoot: Exclude<ParsedSchema, boolean>;
 }
 
@@ -38,6 +37,7 @@ export interface FieldInfo {
 }
 
 const SchemaContext = createContext<SchemaContextType | undefined>(undefined);
+
 export const anyFields = {
   type: ['string', 'number', 'boolean', 'array', 'object'],
   items: true,
@@ -49,23 +49,10 @@ export function SchemaProvider({
   writeOnly,
   docRoot,
   children,
-}: Omit<SchemaContextType, 'ajv'> & { children: ReactNode }) {
-  const ajv = useMemo(
-    () =>
-      new Ajv2020({
-        strict: false,
-        validateSchema: false,
-        validateFormats: false,
-      }),
-    [],
-  );
-
+}: SchemaContextType & { children: ReactNode }) {
   return (
     <SchemaContext.Provider
-      value={useMemo(
-        () => ({ ajv, readOnly, writeOnly, docRoot }),
-        [docRoot, ajv, readOnly, writeOnly],
-      )}
+      value={useMemo(() => ({ readOnly, writeOnly, docRoot }), [docRoot, readOnly, writeOnly])}
     >
       {children}
     </SchemaContext.Provider>
@@ -92,7 +79,6 @@ export function useFieldInfo(
   schema: Exclude<ParsedSchema, boolean>;
   updateInfo: (value: Partial<FieldInfo>) => void;
 } {
-  const { docRoot: doc, ajv } = useSchemaContext();
   const engine = useDataEngine();
   const { generateDefault } = useSchemaUtils();
   const fieldData = useNamespace({
@@ -107,7 +93,7 @@ export function useFieldInfo(
         const [members, field] = union;
 
         out.oneOf = members.findIndex(
-          (item) => typeof item === 'object' && ajv.validate({ ...doc, ...item }, value),
+          (item) => typeof item === 'object' && matchesSchema(item, value),
         );
         if (out.oneOf === -1) out.oneOf = 0;
         out.unionField = field;
@@ -116,10 +102,7 @@ export function useFieldInfo(
       if (Array.isArray(schema.type)) {
         const types = schema.type;
 
-        out.selectedType =
-          types.find((type) => {
-            return ajv.validate({ ...doc, ...schema, type }, value);
-          }) ?? types[0];
+        out.selectedType = types.find((type) => typeMatches(value, type)) ?? types[0];
       }
 
       return out;
@@ -147,7 +130,11 @@ export function useFieldInfo(
         valueSchema = schema[updated.unionField]![updated.oneOf];
       } else if (updated.selectedType) {
         // must remove to `examples` to avoid invalid default values
-        valueSchema = { ...schema, type: updated.selectedType, examples: undefined };
+        valueSchema = {
+          ...schema,
+          type: updated.selectedType,
+          examples: undefined,
+        };
       }
 
       engine.update(fieldName, generateDefault(valueSchema));
@@ -156,29 +143,18 @@ export function useFieldInfo(
 }
 
 export function useSchemaUtils() {
-  const { readOnly, docRoot: doc } = useSchemaContext();
+  const { readOnly } = useSchemaContext();
 
   return {
     generateDefault(schema: ParsedSchema): unknown {
-      return sample(
-        schema as never,
-        {
-          skipNonRequired: true,
-          skipReadOnly: !readOnly,
-          quiet: true,
-        },
-        doc,
-      );
+      return sample(schema as never, {
+        skipNonRequired: true,
+        skipReadOnly: !readOnly,
+        quiet: true,
+      });
     },
     schemaToString(value: ParsedSchema, flags?: FormatFlags) {
-      return schemaToString(
-        value,
-        (raw) => ({
-          raw,
-          dereferenced: dereferenceShallow(raw, doc),
-        }),
-        flags,
-      );
+      return schemaToString(value, flags);
     },
   };
 }
@@ -187,20 +163,15 @@ export function useSchemaUtils() {
  * dereference & merge `allOf`.
  */
 export function useResolvedSchema(raw: ParsedSchema): Exclude<ParsedSchema, boolean> {
-  const { docRoot: doc } = useSchemaContext();
   return useMemo(() => {
-    let out = dereferenceShallow(raw, doc);
+    let out = dereferenceShallow(raw);
 
     if (typeof out === 'object' && out.allOf) {
-      out = mergeAllOf(out, {
-        dereference(schema) {
-          return dereferenceShallow(schema, doc);
-        },
-      });
+      out = mergeAllOf(out);
     }
 
     return typeof out === 'boolean' ? anyFields : out;
-  }, [doc, raw]);
+  }, [raw]);
 }
 
 function getUnion(

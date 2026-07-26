@@ -18,6 +18,7 @@ import { isLayoutTabActive, type LayoutTab } from '@/layouts/shared';
 import { usePathname } from 'fumadocs-core/framework';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Link from 'fumadocs-core/link';
+import { useTreePath } from '@/contexts/tree';
 
 const itemVariants = cva(
   'relative flex flex-row items-center gap-2 rounded-lg p-2 text-start text-fd-muted-foreground wrap-anywhere [&_svg]:size-4 [&_svg]:shrink-0',
@@ -406,10 +407,11 @@ function SidebarTabsDropdown({
   const [open, setOpen] = useState(false);
   const { closeOnRedirect } = useSidebar();
   const pathname = usePathname();
+  const path = useTreePath();
 
   const selected = useMemo(() => {
-    return tabs.findLast((item) => isLayoutTabActive(item, pathname));
-  }, [tabs, pathname]);
+    return tabs.findLast((item) => isLayoutTabActive(item, path, pathname));
+  }, [tabs, path, pathname]);
 
   const onClick = () => {
     closeOnRedirect.current = false;
@@ -436,7 +438,7 @@ function SidebarTabsDropdown({
         <PopoverTrigger
           {...props}
           className={cn(
-            'flex items-center gap-2 rounded-lg p-2 border bg-fd-secondary/50 text-start text-fd-secondary-foreground transition-colors hover:bg-fd-accent data-[state=open]:bg-fd-accent data-[state=open]:text-fd-accent-foreground',
+            'flex items-center gap-2 rounded-lg p-2 border bg-fd-secondary/50 text-start text-fd-secondary-foreground transition-colors hover:bg-fd-accent data-[popup-open]:bg-fd-accent data-[popup-open]:text-fd-accent-foreground',
             props.className,
           )}
         >
@@ -444,7 +446,7 @@ function SidebarTabsDropdown({
           <ChevronsUpDown className="shrink-0 ms-auto size-4 text-fd-muted-foreground" />
         </PopoverTrigger>
       )}
-      <PopoverContent className="flex flex-col gap-1 w-(--radix-popover-trigger-width) p-1 fd-scroll-container">
+      <PopoverContent className="flex flex-col gap-1 w-(--anchor-width) p-1 fd-scroll-container">
         {tabs.map((item) => {
           const isActive = selected && item.url === selected.url;
           if (!isActive && item.unlisted) return;

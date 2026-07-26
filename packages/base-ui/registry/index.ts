@@ -138,6 +138,42 @@ export const registry: Registry = {
       unlisted: true,
     },
     {
+      name: 'layouts/glass',
+      files: [
+        {
+          type: 'layout',
+          path: 'layouts/glass/index.tsx',
+          target: '<dir>/glass/index.tsx',
+          meta: {
+            preserveAs: 'layouts/glass',
+          },
+        },
+        {
+          type: 'layout',
+          path: 'layouts/glass/page/index.tsx',
+          target: '<dir>/glass/page/index.tsx',
+          meta: {
+            preserveAs: 'layouts/glass/page',
+          },
+        },
+      ],
+      unlisted: true,
+    },
+    {
+      name: 'layouts/glass/layout-tabs',
+      unlisted: true,
+      files: [
+        {
+          type: 'layout',
+          path: 'layouts/glass/layout-tabs.tsx',
+          target: '<dir>/glass/layout-tabs.tsx',
+          meta: {
+            preserveAs: 'layouts/glass',
+          },
+        },
+      ],
+    },
+    {
       name: 'layouts/home',
       files: [
         {
@@ -147,10 +183,6 @@ export const registry: Registry = {
           meta: {
             preserveAs: 'layouts/home',
           },
-        },
-        {
-          type: 'ui',
-          path: 'components/ui/navigation-menu.tsx',
         },
       ],
       unlisted: true,

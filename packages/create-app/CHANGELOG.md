@@ -1,3 +1,25 @@
+## create-fumadocs-app@16.1.8
+
+### Fix React Router template
+
+## create-fumadocs-app@16.1.7
+
+### Improve hints for create app CLI
+
+Show details for pros & cons of each framework.
+
+## create-fumadocs-app@16.1.2
+
+### Add Astro framework support
+
+Add Astro as a supported framework with React islands, including framework providers, an example app, create-app template support, search integration, OG image generation, and documentation.
+
+## create-fumadocs-app@16.1.0
+
+### Default to Base UI
+
+Internal packages & templates now use Base UI rather than Radix UI.
+
 # create-next-docs-app
 
 ## 16.0.124

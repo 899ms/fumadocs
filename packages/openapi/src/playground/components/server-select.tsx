@@ -22,7 +22,6 @@ import type { ServerVariableObject } from '@/types';
 import { StfProvider, useFieldValue, useListener, useStf } from '@fumari/stf';
 import { EditIcon } from 'lucide-react';
 import { useTranslations } from '@fuma-translate/react';
-import type { NoReference } from '@fumadocs/api-docs/schema';
 import { resolveServerUrl } from '@fumadocs/api-docs/utils/url';
 
 export default function ServerSelect(props: ComponentProps<typeof DialogTrigger>) {
@@ -65,7 +64,14 @@ export default function ServerSelect(props: ComponentProps<typeof DialogTrigger>
           <DialogTitle>{t('Server URL')}</DialogTitle>
           <DialogDescription>{t('The base URL of your API endpoint.')}</DialogDescription>
         </DialogHeader>
-        <Select value={server?.url} onValueChange={setServer}>
+        <Select
+          items={servers.map((server) => ({
+            value: server.url!,
+            label: <code className="text-[0.8125rem]">{server.url}</code>,
+          }))}
+          value={server?.url ?? null}
+          onValueChange={(v) => v !== null && setServer(v)}
+        >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -98,7 +104,7 @@ function ServerSelectContent({
 }: {
   defaultValues: Record<string, string>;
   onChange: (values: Record<string, string>) => void;
-  schema: Record<string, NoReference<ServerVariableObject>>;
+  schema: Record<string, ServerVariableObject>;
 }) {
   const stf = useStf({
     defaultValues: () => structuredClone(defaultValues),
@@ -137,13 +143,7 @@ function ServerSelectContent({
   );
 }
 
-function Field({
-  fieldName,
-  variable,
-}: {
-  variable: NoReference<ServerVariableObject>;
-  fieldName: string;
-}) {
+function Field({ fieldName, variable }: { variable: ServerVariableObject; fieldName: string }) {
   const t = useTranslations({ note: 'playground server select' });
   const [value, setValue] = useFieldValue([fieldName], {
     compute(currentValue) {
@@ -159,7 +159,7 @@ function Field({
         </SelectTrigger>
         <SelectContent>
           {variable.enum.map((value) => (
-            <SelectItem key={value} value={String(value)}>
+            <SelectItem key={value} value={value}>
               {value}
             </SelectItem>
           ))}

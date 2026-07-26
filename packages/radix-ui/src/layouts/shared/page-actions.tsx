@@ -31,7 +31,7 @@ export function MarkdownCopyButton({
     setLoading(true);
 
     try {
-      const promise = fetch(markdownUrl).then((res) => res.text());
+      const promise = fetch(withBasePath(markdownUrl)).then((res) => res.text());
       cache.set(markdownUrl, promise);
       await navigator.clipboard.write([
         new ClipboardItem({
@@ -103,7 +103,7 @@ export function ViewOptionsPopover({
       },
       markdownUrl && {
         title: t('View as Markdown'),
-        href: markdownUrl,
+        href: withBasePath(markdownUrl),
         icon: <TextIcon />,
       },
       {
@@ -258,4 +258,17 @@ export function ViewOptionsPopover({
       </PopoverContent>
     </Popover>
   );
+}
+
+function withBasePath(href: string) {
+  // ignore external
+  if (href.match(/^\w+:/) || href.startsWith('//')) return href;
+
+  const basePath =
+    // @ts-expect-error -- vite env
+    typeof import.meta.env !== 'undefined' && typeof import.meta.env.BASE_URL === 'string'
+      ? // @ts-expect-error -- vite env
+        import.meta.env.BASE_URL.replace(/\/$/, '')
+      : '';
+  return basePath + href;
 }

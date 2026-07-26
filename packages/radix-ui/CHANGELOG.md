@@ -1,3 +1,65 @@
+## fumadocs-ui@16.12.0
+
+### Introduce Glass Layout
+
+A new layout for docs, a smooth, beautiful variant built around floating, translucent panels.
+
+### Don't force-mount inactive tab content by default
+
+Styled `Tabs` previously kept every tab panel mounted in the DOM (hidden with `display: none`). Inactive panels are now unmounted by default, following the underlying primitive.
+
+You can still opt back into keeping panels mounted per tab with `forceMount` (`fumadocs-ui`) or `keepMounted` (`@fumadocs/base-ui`) on `Tab` / `TabsContent`.
+
+### Open the tab containing a linked heading
+
+When a tab's content stays mounted (`forceMount` / `keepMounted`), navigating to a URL hash that points to an element inside a tab — such as a Table of Contents link to a heading — now opens the tab it belongs to and scrolls to the target. This runs on both initial load and `hashchange`.
+
+## fumadocs-ui@16.11.5
+
+### Correct codeblock props
+
+The type of `title` is now `ReactNode` instead of string.
+
+### Expose sidebar trigger state to assistive technology
+
+`SidebarTrigger` now sets `aria-expanded` and `aria-controls`, and its label changes between `Open Sidebar` and `Close Sidebar` depending on the state.
+
+Previously, both the button opening the mobile sidebar and the one closing it were named `Open Sidebar`, and neither conveyed whether the sidebar was open.
+
+A new `Close Sidebar` translation key is available for customisation.
+
+## fumadocs-ui@16.11.2
+
+### Add Astro framework support
+
+Add Astro as a supported framework with React islands, including framework providers, an example app, create-app template support, search integration, OG image generation, and documentation.
+
+## fumadocs-ui@16.11.0
+
+### Updated the theme switch to use `document.startViewTransition()` for smoother theme transitions with graceful fallback.
+
+
+
+### Default to Base UI
+
+Internal packages & templates now use Base UI rather than Radix UI.
+
+### Support `noCopy` attribute for codeblocks
+
+Use `noCopy` to remove copy button from codeblocks.
+
+## fumadocs-ui@16.10.7
+
+### Fix Page Actions base path handling
+
+The `<PageActions />` component will handle base path for passed `markdownUrl`.
+
+## fumadocs-ui@16.10.6
+
+### Migrate to `cnfast`
+
+Drop `tailwind-merge`.
+
 ## fumadocs-ui@16.10.5
 
 ### Fix "Open in ChatGPT" page action URL

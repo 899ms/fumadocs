@@ -1,3 +1,47 @@
+## fumadocs-core@16.12.1
+
+### Obsidian content source v1
+
+Render Obsidian vaults directly through static or dynamic Fumadocs sources, with lazy in-memory compilation and local content hot reload. Remove the old generated-file and remark-plugin integrations.
+
+Resolve URL-encoded relative file links against their decoded source paths.
+
+## fumadocs-core@16.12.0
+
+### Introduce Glass Layout
+
+A new layout for docs, a smooth, beautiful variant built around floating, translucent panels.
+
+## fumadocs-core@16.11.4
+
+### Migrate from `js-yaml` to `yaml`
+
+## fumadocs-core@16.11.2
+
+### Add Astro framework support
+
+Add Astro as a supported framework with React islands, including framework providers, an example app, create-app template support, search integration, OG image generation, and documentation.
+
+## fumadocs-core@16.11.0
+
+### Default to Base UI
+
+Internal packages & templates now use Base UI rather than Radix UI.
+
+### Support `noCopy` attribute for codeblocks
+
+Use `noCopy` to remove copy button from codeblocks.
+
+## fumadocs-core@16.10.6
+
+### Migrate to `cnfast`
+
+Drop `tailwind-merge`.
+
+### Handle Vite `BASE_URL` for default values
+
+The default search URL endpoint will auto include the base path.
+
 ## fumadocs-core@16.10.4
 
 ### React Router v8 support

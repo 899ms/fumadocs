@@ -18,17 +18,17 @@ import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import * as JsxRuntime from 'react/jsx-runtime';
 import { Operation } from '@/ui/operation';
 import { ServerProvider, useRenderContext } from './contexts/api';
-import { compile } from '@fumari/json-schema-ts';
+import { generate } from '@fumari/json-schema-ts';
 import { ClientCodeBlock } from './components/codeblock';
 import { dereferenceBundledDocument } from '@/utils/document/dereference';
+import { getRaw } from '@scalar/json-magic/magic-proxy';
 import { AuthProvider } from '@/playground/auth';
 import { registerDefault } from '@/requests/generators/all';
 import { createCodeUsageGeneratorRegistry } from '@/requests/generators';
 import type { ShikiFactory } from 'fumadocs-core/highlight/shiki';
 import type { GeneratedPageProps } from '@/utils/pages/builder';
-import type { ParsedSchema } from '@/utils/schema';
 import { Markdown } from './components/markdown';
-import { Schema } from '@fumadocs/api-docs/components/schema';
+import { Schema, type SchemaUIOptions } from '@fumadocs/api-docs/components/schema';
 import { RenderContextProvider } from './contexts/api';
 import type { CreateOpenAPIPageOptions, OpenAPIPageProps } from '.';
 
@@ -44,12 +44,16 @@ export function createOpenAPIPageBase({
     if (typeof schema !== 'object') return;
 
     try {
-      return compile(schema, {
-        name: ctx.name,
-        readOnly: ctx.readOnly,
-        writeOnly: ctx.writeOnly,
-        getSchemaId: ctx.ctx.schema.getRawRef,
-      });
+      // `generate` resolves `$ref`s against the schema root itself,
+      // spread the bundled document into the root so in-document refs are resolvable
+      return generate(
+        { ...(ctx.ctx.schema.bundled as object), ...getRaw(schema) },
+        {
+          name: ctx.name,
+          readOnly: ctx.readOnly,
+          writeOnly: ctx.writeOnly,
+        },
+      );
     } catch (e) {
       console.warn('Failed to generate typescript schema:', e);
     }
@@ -97,16 +101,14 @@ export function createOpenAPIPageBase({
     const processed = useMemo(() => dereferenceBundledDocument(doc), [doc]);
 
     const ctx: RenderContext = useMemo(() => {
-      function renderMarkdown(md: string) {
-        return <Markdown md={md} />;
-      }
-      function resolver(v: ParsedSchema) {
-        // we will only pass dereferenced schema to schema UI
-        return {
-          dereferenced: v,
-          $ref: typeof v === 'object' ? processed.getRawRef(v) : undefined,
-        };
-      }
+      const schemaUIShared = {
+        renderCodeblock(opts) {
+          return <ClientCodeBlock {...opts} />;
+        },
+        renderMarkdown(md) {
+          return <Markdown md={md} />;
+        },
+      } satisfies Partial<SchemaUIOptions>;
 
       return {
         schema: processed,
@@ -119,10 +121,9 @@ export function createOpenAPIPageBase({
           if (schemaUIOptions?.render) return schemaUIOptions.render(props, ctx);
           return (
             <Schema
+              {...schemaUIShared}
               {...props}
               showExample={props.showExample ?? schemaUIOptions?.showExample}
-              resolver={resolver}
-              renderMarkdown={renderMarkdown}
             />
           );
         },
@@ -153,7 +154,7 @@ function PageContent({
   webhooks,
 }: Omit<GeneratedPageProps, 'document'>) {
   const ctx = useRenderContext();
-  const { dereferenced } = ctx.schema;
+  const { dereferenced, resolve } = ctx.schema;
   let { renderPageLayout } = ctx.content ?? {};
   renderPageLayout ??= (slots) => (
     <div className="flex flex-col gap-24 text-sm @container">
@@ -165,7 +166,7 @@ function PageContent({
   let content = renderPageLayout(
     {
       operations: operations?.map((item) => {
-        const pathItem = dereferenced.paths?.[item.path];
+        const pathItem = resolve(dereferenced.paths?.[item.path]);
         if (!pathItem)
           throw new Error(`[Fumadocs OpenAPI] Path not found in OpenAPI schema: ${item.path}`);
 
@@ -191,7 +192,7 @@ function PageContent({
         };
       }),
       webhooks: webhooks?.map((item) => {
-        const webhook = dereferenced.webhooks?.[item.name];
+        const webhook = resolve(dereferenced.webhooks?.[item.name]);
         if (!webhook)
           throw new Error(`[Fumadocs OpenAPI] Webhook not found in OpenAPI schema: ${item.name}`);
 

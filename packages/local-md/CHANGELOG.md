@@ -1,3 +1,23 @@
+## @fumadocs/local-md@0.3.1
+
+### Improve performance
+
+Fixed cache misses and edge cases.
+
+### Extract shared local content source logic to `@fumadocs/local-content`
+
+## @fumadocs/local-md@0.3.0
+
+### Default to Base UI
+
+Internal packages & templates now use Base UI rather than Radix UI.
+
+## @fumadocs/local-md@0.2.4
+
+### Fix deprecation warnings
+
+Address https://github.com/fuma-nama/fumadocs/issues/3380.
+
 # @fumadocs/local-md
 
 ## 0.2.3
