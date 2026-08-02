@@ -1,6 +1,6 @@
 core:changelogs:
-  - content: "---\npackages:\n  npm:create-fumadocs-app:\n    type: patch\n---\n\n## Fix React Router template\n"
-    filename: 2026-07-23-mrxk2q4o.md
+  - content: "---\npackages:\n  npm:fumadocs-mdx:\n    type: patch\n---\n\n## Support thenable Next.js config\n\nAllow the promises to be awaited.\n"
+    filename: 2026-08-02-msbdcbsl.md
     v: 0.0.0
 core:packages:
   - id: npm:@fumadocs/api-docs
@@ -17,12 +17,10 @@ core:packages:
     updated: false
   - id: npm:@fumadocs/content-collections
     updated: false
-  - changelogIds:
-      - 2026-07-23-mrxk2q4o.md
-    id: npm:create-fumadocs-app
-    updated: true
   - id: npm:fumadocs-core
     updated: false
+  - id: npm:create-fumadocs-app
+    updated: true
   - id: npm:create-fumadocs-versions
     updated: true
   - id: npm:fumadocs-docgen
@@ -35,9 +33,13 @@ core:packages:
     updated: false
   - id: npm:@fumadocs/local-md
     updated: false
-  - id: npm:fumadocs-mdx
-    updated: false
+  - changelogIds:
+      - 2026-08-02-msbdcbsl.md
+    id: npm:fumadocs-mdx
+    updated: true
   - id: npm:@fumadocs/mdx-remote
+    updated: false
+  - id: npm:@fumadocs/notion
     updated: false
   - id: npm:fumadocs-obsidian
     updated: false
@@ -47,9 +49,9 @@ core:packages:
     updated: false
   - id: npm:fumadocs-python
     updated: false
-  - id: npm:@fumadocs/sanity
-    updated: false
   - id: npm:fumadocs-ui
+    updated: false
+  - id: npm:@fumadocs/sanity
     updated: false
   - id: npm:@fumadocs/satteri
     updated: false
@@ -75,8 +77,8 @@ npm:packages:
   - id: npm:@fumadocs/cli
   - id: npm:@fumadocs/content
   - id: npm:@fumadocs/content-collections
-  - id: npm:create-fumadocs-app
   - id: npm:fumadocs-core
+  - id: npm:create-fumadocs-app
   - id: npm:create-fumadocs-versions
   - id: npm:fumadocs-docgen
   - id: npm:fumadocs-epub
@@ -85,12 +87,13 @@ npm:packages:
   - id: npm:@fumadocs/local-md
   - id: npm:fumadocs-mdx
   - id: npm:@fumadocs/mdx-remote
+  - id: npm:@fumadocs/notion
   - id: npm:fumadocs-obsidian
   - id: npm:fumadocs-openapi
   - id: npm:fumadocs-preview
   - id: npm:fumadocs-python
-  - id: npm:@fumadocs/sanity
   - id: npm:fumadocs-ui
+  - id: npm:@fumadocs/sanity
   - id: npm:@fumadocs/satteri
   - id: npm:@fumadocs/shadcn
   - id: npm:@fumari/stf
@@ -99,3 +102,27 @@ npm:packages:
   - id: npm:fumadocs-twoslash
   - id: npm:fumadocs-typescript
   - id: npm:@fumadocs/vite
+  - id: npm:docs
+  - id: npm:example-asyncapi
+  - id: npm:example-base-ui
+  - id: npm:example-i18n
+  - id: npm:example-next
+  - id: npm:example-next-min
+  - id: npm:example-next-shadcn
+  - id: npm:example-next-static
+  - id: npm:example-openapi
+  - id: npm:example-python
+  - id: npm:example-react-router
+  - id: npm:example-react-router-i18n
+  - id: npm:example-react-router-min
+  - id: npm:example-react-router-rsc
+  - id: npm:example-react-router-spa
+  - id: npm:example-tanstack-start
+  - id: npm:example-tanstack-start-i18n
+  - id: npm:example-tanstack-start-min
+  - id: npm:example-tanstack-start-openapi
+  - id: npm:example-tanstack-start-spa
+  - id: npm:example-tanstack-start-story
+  - id: npm:example-waku
+  - id: npm:example-waku-i18n
+  - id: npm:vite-data
