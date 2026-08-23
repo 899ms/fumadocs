@@ -1,3 +1,75 @@
+## fumadocs-core@16.15.0
+
+### Redesign source API
+
+Content sources can hook into the static loader they are attached to, and dynamic sources can opt out of the loader's in-memory file cache.
+
+`configureStatic` runs when a source is attached to `loader()`, and again whenever `dynamicLoader()` builds a new static loader:
+
+```ts
+export function createMySource(): DynamicSource {
+  return {
+    cache: 'custom',
+    async files() {
+      return loadFiles();
+    },
+    configureStatic({ loader, source }) {
+      // `loader` is the created static loader
+      // `source` is the record key when using named sources
+    },
+    configure(loader, { source }) {
+      loader.invalidate();
+    },
+  };
+}
+```
+
+- `cache: 'memory'` (default): `files()` is called once until `invalidate()`.
+- `cache: 'custom'`: the source caches itself. `dynamicLoader()` re-runs `files()` on `get()` and rebuilds only when the file list is shallowly different (by identity).
+
+### Integrations
+
+GraphQL cross-links are generated from the attached loader instead of a `baseUrl` option on `staticSource()`. Local, OpenAPI, and AsyncAPI `dynamicSource()` use `cache: 'custom'` and reuse generated files by identity until `invalidate()`.
+
+Sanity now uses `cache: 'custom'` when given a `sanityFetch` from `next-sanity/live`, calling `invalidate()` in draft mode is no longer needed.
+
+### Return heading and text results from the Algolia client
+
+`algoliaClient` grouped hits into page, heading and text results, then dropped everything except pages. All three are now returned with highlighting, matching the other search clients.
+
+### Fix locale-only pages leaking into other locales
+
+i18n storages no longer share folder arrays with the fallback locale. Locale-only pages previously appeared in every locale's page tree as duplicate nodes.
+
+### Index pages by URL
+
+`getPageByHref` resolves absolute URLs through an index instead of scanning all pages on every call.
+
+### Do not cache rejected promises
+
+The dynamic loader's `files()`, Notion's page `load()`, `createFromSource`'s index build, and Shiki factory init retry on the next call after a transient failure, instead of returning the same rejection forever.
+
+### Highlight only the search results within `limit`
+
+`limit` bounds the returned hits, so search now stops at that many results instead of highlighting every matched page and slicing afterwards.
+
+## fumadocs-core@16.14.5
+
+### Loader: `next` parameter for custom `slugs` function
+
+The `slugs` option now receives a `next` function as its second argument, which generates the default slugs from the file path. This lets custom slug functions build on the default generation instead of reimplementing it:
+
+```ts
+loader({
+  slugs(file, next) {
+    if (file.path.startsWith('blog/')) return ['blog', ...next()];
+    // return `undefined` to generate default slugs
+  },
+});
+```
+
+**Behavior change:** conflicting cases like `dir/index.mdx` vs `dir.mdx` are now resolved for custom slugs functions as well. Index files are always processed after other pages, and receive an `index` suffix when their slugs (custom or default) collide with an existing page — previously, custom slugs functions that produced such collisions threw a `Duplicated slugs` error.
+
 ## fumadocs-core@16.14.4
 
 ### Introduce `@fumari/image-size`, replacing `image-size` in `remarkImage`

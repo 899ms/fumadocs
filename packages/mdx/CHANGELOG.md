@@ -1,3 +1,45 @@
+## fumadocs-mdx@15.3.1
+
+### Scope `lastModified` git log to the content directory
+
+`git log` is scoped to the collection's content directory instead of buffering the repository's entire history in every worker.
+
+### Fix Vite dev server crash on declaration-only dependencies
+
+The injected Vite config no longer pre-bundles packages without runtime JavaScript, such as `@types/mdx`. Pre-bundling them made esbuild parse `.d.ts` files and fail on imports that only exist in type space, crashing the dev server.
+
+### Encode `import.meta.glob` query values
+
+The Vite codegen passed the query to `import.meta.glob` as an object, letting the bundler serialize it. Rolldown inlines the values as-is, so a macro id such as `src/lib/source.ts#docs` left an unescaped `/` in the content file's module id and relative imports from that module (e.g. images from `![Banner](/logo.png)`) failed to resolve, since the importer's directory is derived from the raw id.
+
+The query is now serialized (and percent-encoded) by Fumadocs itself, matching what the Node.js codegen already did.
+
+## fumadocs-mdx@15.3.0
+
+### Sätteri 0.10
+
+`@fumadocs/satteri` now requires `satteri` ^0.10.3, and the plugins were rewritten on its new capabilities:
+
+- Exports (`frontmatter`, `toc`, `structuredData`, …) are emitted by an `after` document hook instead of an anchor marker appended to the source, so plugins no longer see (or need to skip) the anchor node.
+- `remark-steps`, `remark-admonition` and `remark-code-tab` still detect their targets through node visitors (so documents without the construct cost nothing), but process each parent exactly once in an `after` hook, replacing the per-visit dedup workarounds.
+- `remark-llms` stringifies the document root from a `before` hook instead of subscribing to 19 node types to find it.
+- Markdown documents compile through Sätteri's own `markdownToJs`; the hand-assembled pipeline is gone. Raw HTML in `.md` files is still dropped, matching the previous behavior.
+- `rehype-katex` parses KaTeX output with Sätteri's `htmlToHast`, dropping the `hast-util-from-html` dependency.
+- No plugin reads `node.position`, so Sätteri now skips source-position tracking entirely (~15% faster parse).
+
+**Breaking:** `ExtraPluginHooks.beforeToJs` was removed. Seed `ctx.data` from a Sätteri `before` hook on the plugin definition instead — it also receives the document root:
+
+```ts
+import { defineMdastPlugin } from 'satteri';
+
+defineMdastPlugin({
+  name: 'my-plugin',
+  before(root, ctx) {
+    ctx.data.myValue ??= [];
+  },
+});
+```
+
 ## fumadocs-mdx@15.2.3
 
 ### Fix Base UI's `use-sync-external-store` breaking Vite dev servers
