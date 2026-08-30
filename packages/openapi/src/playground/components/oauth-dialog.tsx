@@ -88,8 +88,19 @@ function Content({ schemeId, scopes, setToken, setOpen }: AuthDialogContentProps
   const [type, setType] = useState<FlowType | null>(() => {
     return Object.keys(scheme.flows!)[0] as FlowType;
   });
+  const [clientAuth, setClientAuth] = useState<'body' | 'header'>('body');
 
   const t = useTranslations({ note: 'OAuth dialog' });
+  const clientAuthMethods = {
+    body: {
+      name: t('Send client credentials in body'),
+      description: t('Include the client ID and secret in the token request body.'),
+    },
+    header: {
+      name: t('Send as Basic Auth header'),
+      description: t('Send the client ID and secret in the Authorization header.'),
+    },
+  };
   const allFlows: Record<FlowType, FlowInfo> = useMemo(
     () => ({
       password: {
@@ -177,17 +188,27 @@ function Content({ schemeId, scopes, setToken, setOpen }: AuthDialogContentProps
     if (type === 'password') {
       const value = scheme.flows![type]!;
 
+      const body = new URLSearchParams({
+        grant_type: 'password',
+        username: values.username,
+        password: values.password,
+        scope: scopes.join('+'),
+      });
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      };
+
+      if (clientAuth === 'header') {
+        headers.Authorization = `Basic ${btoa(`${values.clientId}:${values.clientSecret}`)}`;
+      } else {
+        if (values.clientId) body.set('client_id', values.clientId);
+        if (values.clientSecret) body.set('client_secret', values.clientSecret);
+      }
+
       res = await fetch(value.tokenUrl!, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'password',
-          username: values.username,
-          password: values.password,
-          scope: scopes.join('+'),
-        }),
+        headers,
+        body,
       });
     }
 
@@ -235,9 +256,19 @@ function Content({ schemeId, scopes, setToken, setOpen }: AuthDialogContentProps
       }}
     >
       <Select
-        items={Object.fromEntries(
-          Object.keys(scheme.flows!).map((key) => [key, allFlows[key as FlowType].name]),
-        )}
+        items={Object.keys(scheme.flows!).map((key) => {
+          const { name, description } = allFlows[key as FlowType];
+
+          return {
+            value: key,
+            label: (
+              <>
+                <p className="font-medium">{name}</p>
+                <p className="text-fd-muted-foreground">{description}</p>
+              </>
+            ),
+          };
+        })}
         value={type}
         onValueChange={setType}
       >
@@ -258,7 +289,10 @@ function Content({ schemeId, scopes, setToken, setOpen }: AuthDialogContentProps
         </SelectContent>
       </Select>
 
-      {(type === 'authorizationCode' || type === 'clientCredentials' || type === 'implicit') && (
+      {(type === 'authorizationCode' ||
+        type === 'clientCredentials' ||
+        type === 'implicit' ||
+        type === 'password') && (
         <fieldset className="flex flex-col gap-1.5">
           <label htmlFor="client_id" className={cn(labelVariants())}>
             {t('Client ID')}
@@ -274,11 +308,11 @@ function Content({ schemeId, scopes, setToken, setOpen }: AuthDialogContentProps
             autoComplete="off"
             disabled={isLoading}
             defaultValue={defaultValues.clientId}
-            required
+            required={type !== 'password' || clientAuth === 'header'}
           />
         </fieldset>
       )}
-      {(type === 'authorizationCode' || type === 'clientCredentials') && (
+      {(type === 'authorizationCode' || type === 'clientCredentials' || type === 'password') && (
         <fieldset className="flex flex-col gap-1.5">
           <label htmlFor="client_secret" className={cn(labelVariants())}>
             {t('Client Secret')}
@@ -294,12 +328,42 @@ function Content({ schemeId, scopes, setToken, setOpen }: AuthDialogContentProps
             autoComplete="off"
             disabled={isLoading}
             defaultValue={defaultValues.clientSecret}
-            required
+            required={type !== 'password' || clientAuth === 'header'}
           />
         </fieldset>
       )}
       {type === 'password' && (
         <>
+          <fieldset className="flex flex-col gap-1.5">
+            <label htmlFor="client_auth" className={cn(labelVariants())}>
+              {t('Client Authentication')}
+            </label>
+            <Select
+              items={Object.entries(clientAuthMethods).map(([key, method]) => ({
+                label: (
+                  <>
+                    <p className="font-medium">{method.name}</p>
+                    <p className="text-fd-muted-foreground">{method.description}</p>
+                  </>
+                ),
+                value: key,
+              }))}
+              value={clientAuth}
+              onValueChange={(v) => v !== null && setClientAuth(v)}
+            >
+              <SelectTrigger id="client_auth" disabled={isLoading}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(clientAuthMethods).map(([key, method]) => (
+                  <SelectItem key={key} value={key}>
+                    <p className="font-medium">{method.name}</p>
+                    <p className="text-fd-muted-foreground">{method.description}</p>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </fieldset>
           <fieldset className="flex flex-col gap-1.5">
             <label htmlFor="username" className={cn(labelVariants())}>
               {t('Username')}

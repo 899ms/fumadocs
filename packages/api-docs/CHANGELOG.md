@@ -1,3 +1,34 @@
+## @fumadocs/api-docs@0.2.6
+
+### Fix OpenAPI 3.0 `example` in external files crashing `OpenAPIPage`
+
+The version upgrader ran after external documents were embedded under `x-ext`, where it can no longer classify schemas by their JSON path: a schema-level `example` from an external 3.0 file became an Example Object map instead of the JSON Schema `examples` array, crashing the schema UI with `schema.examples is not iterable`.
+
+Each document is now upgraded before bundling embeds it. This also honors the external file's own declared OpenAPI version, so a 3.0 file referenced from a 3.1 document is upgraded too (previously it was skipped entirely).
+
+## @fumadocs/api-docs@0.2.5
+
+### Support HTTP Basic client authentication in OAuth password flow
+
+Some OAuth servers require client credentials in an HTTP Basic `Authorization` header instead of the request body. The password flow dialog now offers a Client Authentication select to choose between the two methods, as described in [RFC 6749, section 2.3.1](https://www.rfc-editor.org/rfc/rfc6749#section-2.3.1).
+
+Fix [#3506](https://github.com/fuma-nama/fumadocs/issues/3506)
+
+## @fumadocs/api-docs@0.2.4
+
+### Preserve `description` when merging `allOf` schemas
+
+`mergeAllOf()` no longer drops descriptions defined inside `allOf` members, so this common composition pattern renders its description in the Schema UI:
+
+```yaml
+amount:
+  allOf:
+    - $ref: '#/components/schemas/Money'
+    - description: Property-specific description
+```
+
+The last defined description among members wins, and a description on the outer schema keeps precedence over all of them.
+
 ## @fumadocs/api-docs@0.2.3
 
 ### Survive `$ref` cycles in `dereferenceShallow`
