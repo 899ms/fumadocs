@@ -1,6 +1,6 @@
 {
   "name": "@fumari/stf",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Schema to Form.",
   "keywords": [],
   "license": "MIT",
@@ -27,8 +27,8 @@
     "types:check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "26.5.0",
-    "@types/react": "^19.2.18",
+    "@types/node": "26.6.1",
+    "@types/react": "^19.3.0",
     "tsconfig": "workspace:*",
     "tsdown": "0.23.0"
   },

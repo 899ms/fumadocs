@@ -1,3 +1,45 @@
+## fumadocs-ui@16.15.13
+
+### Keep the collapsed sidebar's controls off the page title
+
+With the sidebar collapsed, the docs layout floats the reopen and search buttons in a fixed pill at the top-left of the page and starts the article at the same row.
+Wherever the article is not centered with room to spare, every viewport below about 1280px, the pill covered the page title.
+The article now leaves room for the pill while the sidebar is collapsed.
+
+### AI page actions name the page by the URL the reader is on
+
+The "Open in ..." prompts built the page URL from the router pathname and the origin.
+Next's `usePathname()` omits a configured `basePath`, so a site mounted under one sent assistants a URL that did not exist.
+
+The prompt now uses the reader's current URL, without query and hash, and falls back to the pathname during server rendering.
+A new `pageUrl` prop on `ViewOptionsPopover` sets a canonical URL instead.
+
+### Subscribe with `useSyncExternalStore`
+
+#### Optimize Performance
+
+Use `useSyncExternalStore()` from React.
+
+## fumadocs-ui@16.15.11
+
+### Shadcn UI compatible primitives
+
+The primitives in `fumadocs-ui/components/ui/*` now follow the API of Shadcn UI, so components installed by the CLI can use the ones you already have.
+
+`buttonVariants` accepts the `default` variant of Shadcn UI:
+
+```tsx
+buttonVariants({ variant: 'default', size: 'sm' });
+```
+
+`primary` and the `color` alias still work.
+
+`fumadocs-ui/components/ui/scroll-area` is removed, the sidebars render the scroll area primitives directly.
+
+### Mark packages side-effect free
+
+All packages now declare `sideEffects` in `package.json`, so bundlers can tree-shake unused modules. Packages shipping stylesheets list them as side effects to keep CSS imports.
+
 ## fumadocs-ui@16.15.10
 
 ### Fix language switching with hidden locale prefixes

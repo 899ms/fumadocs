@@ -1,3 +1,35 @@
+## fumadocs-core@16.15.13
+
+### Keep TOC step numbers after an HTML re-parse
+
+`remarkSteps` marks each step heading with a numeric `data-fd-step`, and the TOC plugin only read it as a number.
+A later `rehype-raw` pass re-parses the tree from HTML, so the property came back as the canonical `dataFdStep` string and every step number silently vanished from the table of contents.
+
+`rehypeToc` now accepts both shapes, so pipelines that render raw HTML in Markdown keep their numbered TOC.
+
+### Subscribe with `useSyncExternalStore`
+
+#### Optimize Performance
+
+Use `useSyncExternalStore()` from React.
+
+## fumadocs-core@16.15.12
+
+### Fix `filterElement` being ignored by `remarkLLMs`
+
+`remarkLLMs` wrote its own `filterElement` over yours, so the option did nothing:
+
+```ts
+remarkLLMs({
+  // never ran
+  filterElement: (node) => node.name !== 'Callout',
+});
+```
+
+Your function now runs for every node except `mdxjsEsm`, which stays excluded either way.
+
+Fumadocs MDX passes this option through `postprocess.includeProcessedMarkdown`.
+
 ## fumadocs-core@16.15.10
 
 ### Fix same-page anchors on Tanstack Start

@@ -1,3 +1,46 @@
+## fumadocs-mdx@15.4.3
+
+### Fix `experimentalBuildCache` bloating frontmatter-only imports
+
+With a warm build cache, `?only=frontmatter` imports were served the fully compiled page from cache instead of the frontmatter module, so every page was bundled two more times. The cache now only applies to full compilations.
+
+## fumadocs-mdx@15.4.2
+
+### Fix the `_mdast` export with `removePosition`
+
+```ts
+// fumadocs-mdx collection config
+postprocess: {
+  includeMDAST: { removePosition: true },
+},
+```
+
+This exported `_mdast` with no value, and `getMDAST()` then reported that `includeMDAST` was disabled. `removePosition` strips positions in place and returns nothing, so `JSON.stringify` received `undefined`.
+
+The tree is now cloned, stripped, and serialized from the clone.
+
+### Fix `SOURCEMAP_BROKEN` warnings on Vite
+
+With `build.sourcemap` enabled, Vite warned once per content and meta file because the loaders returned no source map. They now return an empty map when nothing is generated.
+
+Source maps for MDX stay opt-in, pass `SourceMapGenerator` from `source-map` to MDX options:
+
+```ts
+import { SourceMapGenerator } from 'source-map';
+
+export default defineConfig({
+  mdxOptions: {
+    SourceMapGenerator,
+  },
+});
+```
+
+## fumadocs-mdx@15.4.1
+
+### Mark packages side-effect free
+
+All packages now declare `sideEffects` in `package.json`, so bundlers can tree-shake unused modules. Packages shipping stylesheets list them as side effects to keep CSS imports.
+
 ## fumadocs-mdx@15.4.0
 
 ### Remark LLMs: export a component with `output: "function"`
